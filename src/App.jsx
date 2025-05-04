@@ -32,8 +32,8 @@ function FallbackWithSuspends({suspenseId}) {
 function App({suspenseId}) {
   return (
     <>
-      <h1>React SSR Bug Repro</h1>
-      <Suspense fallback={<FallbackWithSuspends suspenseId={suspenseId + 'fallback'} />}>
+      <h1>React SSR renderToContainer</h1>
+      <Suspense fallback={"Loading..."}>
         <ComponentThatSuspends suspenseId={suspenseId} timeoutMs={2000}/>
       </Suspense>
     </>

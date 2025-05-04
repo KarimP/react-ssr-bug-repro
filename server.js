@@ -1,6 +1,6 @@
-import express from 'express';
-import { createServer as createViteServer } from 'vite';
-import { Transform as TransformStream } from 'node:stream';
+import express from "express";
+import { createServer as createViteServer } from "vite";
+import { Readable } from "node:stream";
 
 const app = express();
 const vite = await createViteServer({
@@ -8,53 +8,31 @@ const vite = await createViteServer({
     middlewareMode: true,
     hmr: false,
   },
-  appType: 'custom',
+  appType: "custom",
 });
 app.use(vite.middlewares);
 
-const FAKE_END = '</body></html>';
-class ViteTransformStream extends TransformStream {
-  _receivedFirstChunk = false;
-
-  constructor(response, url) {
-    super({decodeStrings: false});
-    this.response = response;
-    this.url = url;
-  }
-
-  _transform(chunk, _encoding, callback) {
-    if (this._receivedFirstChunk) {
-      callback(null, chunk);
-    } else {
-      this._receivedFirstChunk = true;
-      this.response.statusCode = 200;
-      this.response.setHeader("content-type", "text/html");
-      vite.transformIndexHtml(this.url, chunk.toString('utf-8') + FAKE_END)
-        .then(transformedChunk => {
-          callback(null, transformedChunk.slice(0, FAKE_END.length * -1));
-      });
-    }
-  }
-}
-
 let suspenseIdCounter = 0;
-app.use(async (request, response, next) => {
-  function handleError(err) {
-    console.log('err', err);
-    response.setHeader('content-type', 'text/html');
-    response.send('<h1>Something went wrong</h1>'); 
-    vite.ssrFixStacktrace(err)
-    next(err);
-  }
-  try {
-    const {render} = (await vite.ssrLoadModule('/src/entry-server.jsx'));
-    const transformStream = new ViteTransformStream(response, request.originalUrl);
-    transformStream.pipe(response);
-    render(transformStream, handleError, suspenseIdCounter++, response);
-  } catch (err) {
-    handleError(err);
-  }
+app.use(async (request, response) => {
+  const { prerender, render } = await vite.ssrLoadModule(
+    "/src/entry-server.jsx",
+  );
+
+  // Get the shell and the postponed state.
+  const { shell, postponed } = await prerender();
+
+  response.statusCode = 200;
+  response.setHeader("content-type", "text/html");
+
+  // Stream the shell.
+  const shellStream = Readable.from([shell]);
+  shellStream.pipe(response, { end: false });
+
+  // Resume and render the rest of the app.
+  shellStream.on("end", () => {
+    // TODO: this can be done in parallel but I suck at streams.
+    render(response, postponed, suspenseIdCounter++);
+  });
 });
 
 app.listen(8080);
-console.log('Server ready: http://localhost:8080/');

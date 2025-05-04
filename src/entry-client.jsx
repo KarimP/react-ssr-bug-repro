@@ -3,7 +3,7 @@ import App from './App.jsx';
 
 hydrateRoot(
   document.getElementById('root'),
-  <App suspenseId={document.getElementById("suspenseId").dataset.suspenseId}/>,
+  <div><App /></div>,
 );
 
 window.onerror = function onerror(event, source, lineno, colno, error) {
