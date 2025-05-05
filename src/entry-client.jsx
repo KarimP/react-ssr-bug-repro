@@ -1,9 +1,14 @@
 import { hydrateRoot } from 'react-dom/client';
+import { StrictMode } from 'react';
 import App from './App.jsx';
 
 hydrateRoot(
   document.getElementById('root'),
-  <App suspenseId={document.getElementById('suspenseId').dataset.suspenseId} />
+  <StrictMode>
+    <App
+      suspenseId={document.getElementById('suspenseId').dataset.suspenseId}
+    />
+  </StrictMode>
 );
 
 window.onerror = function onerror(event, source, lineno, colno, error) {
