@@ -96,6 +96,7 @@ function App({ suspenseId }) {
       <h1>React SSR Bug Repro</h1>
       <div>Green = Component was initially rendered on the server</div>
       <div>Red = Component was initially rendered on the client</div>
+      <br />
       <HighlightInitialRenderingEnvironment>
         <AppContextValue />
       </HighlightInitialRenderingEnvironment>
@@ -121,7 +122,16 @@ function App({ suspenseId }) {
           the context change that happens in the <code>useEffect</code> hook in
           the <code>{'<App />'}</code> component
           <br />
-          will result in the server rendered markup showing up instead.
+          will result in the server rendered markup showing up instead. Add a
+          breakpoint
+          <br />
+          on subtree modifications to the body tag within the 3s timeout for the
+          suspense
+          <br />
+          boundary to see break on the React SSR completeBoundary instruction to
+          see the
+          <br />
+          server rendered markup that gets thrown away.
         </div>
       </HighlightInitialRenderingEnvironment>
       <br />
