@@ -1,11 +1,11 @@
 import { Suspense, useState } from 'react';
 
 const suspensePromises = {};
-function ComponentThatSuspends({ children, timeoutMs, suspenseId: id }) {
+function ComponentThatSuspendsOnlyOnDuringSSR({ children, timeoutMs, suspenseId: id }) {
   if (!(id in suspensePromises)) {
     suspensePromises[id] = { suspensePromiseResolved: false };
   }
-  if (!suspensePromises[id].suspensePromiseResolved) {
+  if (!suspensePromises[id].suspensePromiseResolved && import.meta.env.SSR) {
     if (!suspensePromises[id].suspensePromise) {
       suspensePromises[id].suspensePromise = new Promise((resolve) => {
         setTimeout(() => {
@@ -54,9 +54,9 @@ function App({ suspenseId }) {
         <br />
         <br />
         <Suspense fallback={<FallbackButton onClick={handleClick} />}>
-          <ComponentThatSuspends suspenseId={suspenseId} timeoutMs={3000}>
+          <ComponentThatSuspendsOnlyOnDuringSSR suspenseId={suspenseId} timeoutMs={3000}>
             <ResolvedButton onClick={handleClick} />
-          </ComponentThatSuspends>
+          </ComponentThatSuspendsOnlyOnDuringSSR>
         </Suspense>
         {didClick && <div>Button was clicked!</div>}
       </div>
