@@ -4,11 +4,9 @@ import App from './App.jsx';
 
 hydrateRoot(
   document.getElementById('root'),
-  <StrictMode>
     <App
       suspenseId={document.getElementById('suspenseId').dataset.suspenseId}
     />
-  </StrictMode>
 );
 
 window.onerror = function onerror(event, source, lineno, colno, error) {

@@ -1,7 +1,7 @@
-import { Suspense } from 'react';
+import { Suspense, useState } from 'react';
 
 const suspensePromises = {};
-function ComponentThatSuspends({ timeoutMs, suspenseId: id }) {
+function ComponentThatSuspends({ children, timeoutMs, suspenseId: id }) {
   if (!(id in suspensePromises)) {
     suspensePromises[id] = { suspensePromiseResolved: false };
   }
@@ -17,29 +17,49 @@ function ComponentThatSuspends({ timeoutMs, suspenseId: id }) {
     }
     throw suspensePromises[id].suspensePromise;
   }
-  return <div>Resolved</div>;
+  return <>{children}</>;
 }
 
-function FallbackWithSuspends({ suspenseId }) {
-  return (
-    <div>
-      This is a suspense fallback that has nested suspends
-      <Suspense fallback={<div>Nested suspense fallback</div>}>
-        <ComponentThatSuspends suspenseId={suspenseId} timeoutMs={5000} />
-      </Suspense>
-    </div>
-  );
+function FallbackButton({ onClick }) {
+  console.log('Running FallbackButton...');
+  return <button onClick={onClick}>Fallback Button</button>;
+}
+
+function ResolvedButton({ onClick }) {
+  console.log('Running ResolvedButton...');
+  return <button onClick={onClick}>Resolved Button</button>;
 }
 
 function App({ suspenseId }) {
+  const [didClick, setDidClick] = useState(false);
+  const handleClick = () => {
+    console.log('clicked');
+    setDidClick(!didClick);
+  };
   return (
     <>
       <h1>React SSR Bug Repro</h1>
-      <Suspense
-        fallback={<FallbackWithSuspends suspenseId={suspenseId + 'fallback'} />}
-      >
-        <ComponentThatSuspends suspenseId={suspenseId} timeoutMs={2000} />
-      </Suspense>
+      <div>
+        Clicking either the fallback or resolved buttons should toggle "Button
+        was
+        <br />
+        clicked!" below. Clicking on the "Suspense sibling" will cancel
+        hydration and
+        <br />
+        client render everything.
+      </div>
+      <br />
+      <div>
+        <button onClick={handleClick}>Suspense sibling</button>
+        <br />
+        <br />
+        <Suspense fallback={<FallbackButton onClick={handleClick} />}>
+          <ComponentThatSuspends suspenseId={suspenseId} timeoutMs={3000}>
+            <ResolvedButton onClick={handleClick} />
+          </ComponentThatSuspends>
+        </Suspense>
+        {didClick && <div>Button was clicked!</div>}
+      </div>
     </>
   );
 }
