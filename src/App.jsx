@@ -49,7 +49,7 @@ function App({ suspenseId }) {
         client render everything.
       </div>
       <br />
-      <div>
+      <div style={{borderColor: 'red', borderStyle:'solid'}} onClick={handleClick}>
         <button onClick={handleClick}>Suspense sibling</button>
         <br />
         <br />
